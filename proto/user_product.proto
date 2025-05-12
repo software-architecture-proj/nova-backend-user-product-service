@@ -1,0 +1,31 @@
+syntax = "proto3"
+
+option go_package = "module github.com/software-architecture-proj/nova-backend-user-product-service/proto"; // Go package for generated code
+
+package user_product; // Protobuf package name
+
+// -----------------------------------------------------------------------------
+// Service Definition: UserProductService
+// This service handles user profiles, banking products, and customer accounts.
+// -----------------------------------------------------------------------------
+
+service UserProductService {
+  // User Management
+  rpc CreateUser(CreateUserRequest) returns (User) {}
+  rpc GetUserByID(GetUserByIDRequest) returns (User) {}
+  rpc UpdateUserProfile(UpdateUserProfileRequest) returns (User) {}
+
+  // Product Catalog Management (simplified for MVP)
+  rpc GetProductByID(GetProductByIDRequest) returns (Product) {}
+  rpc GetAllProducts(GetAllProductsRequest) returns (GetAllProductsResponse) {}
+
+  // Customer Account Management
+  rpc CreateAccount(CreateAccountRequest) returns (Account) {}
+  rpc GetAccountsByUserID(GetAccountsByUserIDRequest) returns (GetAccountsByUserIDResponse) {}
+}
+
+// -----------------------------------------------------------------------------
+// Messages: Data Structures for Requests and Responses
+// -----------------------------------------------------------------------------
+
+
