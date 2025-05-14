@@ -7,7 +7,7 @@ import (
 type Repository interface {
     CreatePocket(pocket *Pocket) error
     GetPocketsByUserID(user_id string) ([]Pocket, error)
-    UpdatePocketByID(id string) error
+    UpdatePocketByID(id string, new_pocket *Pocket) error
     DeletePocketByID(id string) error
 }
 
