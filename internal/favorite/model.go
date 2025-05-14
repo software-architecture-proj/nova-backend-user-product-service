@@ -16,5 +16,5 @@ type Favorite struct {
 	FavoriteUser   user.User `gorm:"foreignKey:FavoriteUserID;references:ID"`
 	Alias          string    `gorm:"unique;not null"`
 	CreatedAt      time.Time
-	DeletedAt      *time.Time `gorm:"index"`
+	DeletedAt      time.Time `gorm:"index"`
 }

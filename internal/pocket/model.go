@@ -29,5 +29,5 @@ type Pocket struct {
 	Amount    int64          `gorm:"not null"` // Amount in the pocket
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	DeletedAt *time.Time `gorm:"index"` // Soft delete
+	DeletedAt time.Time `gorm:"index"` // Soft delete
 }
