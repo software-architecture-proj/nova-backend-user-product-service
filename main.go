@@ -1,24 +1,39 @@
 package main
 
+/*
+
 import (
-	"fmt"
-	"log"
-	"nova-backend-user-product-service/config"
+    "log"
+    "net"
+
+    "nova-backend-user-product-service/config"
+    "nova-backend-user-product-service/internal/user"
+    "nova-backend-user-product-service/internal/user/pb"
+
+    "google.golang.org/grpc"
+    "google.golang.org/grpc/reflection"
 )
 
 func main() {
-	config.InitDB()
+    config.InitDB()
 
-	sqlDB, err := config.DB.DB()
-	if err != nil {
-		log.Fatalf("Database instance error: %v", err)
-	}
+    lis, err := net.Listen("tcp", ":50051")
+    if err != nil {
+        log.Fatalf("failed to listen: %v", err)
+    }
 
-	err = sqlDB.Ping()
-	if err != nil {
-		log.Fatalf("Failed to ping DB: %v", err)
-	}
+    grpcServer := grpc.NewServer()
+    userRepo := user.NewRepository(config.DB)
+    userService := user.NewService(userRepo)
 
-	fmt.Println("Database connection established.")
+    pb.RegisterUserServiceServer(grpcServer, userService)
 
+    // Optional reflection for CLI tools
+    reflection.Register(grpcServer)
+
+    log.Println("gRPC server listening on :50051")
+    if err := grpcServer.Serve(lis); err != nil {
+        log.Fatalf("failed to serve: %v", err)
+    }
 }
+*/
