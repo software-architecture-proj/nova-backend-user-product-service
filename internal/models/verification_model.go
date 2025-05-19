@@ -1,7 +1,6 @@
-package verification
+package models
 
 import (
-	"nova-backend-user-product-service/internal/user"
 	"time"
 
 	"github.com/google/uuid"
@@ -23,7 +22,7 @@ const (
 type Verification struct {
 	ID     uuid.UUID          `gorm:"type:char(36);primaryKey"`
 	UserID uuid.UUID          `gorm:"type:char(36);not null"` // FK to user.id
-	User   user.User          `gorm:"foreignKey:UserID;references:ID"`
+	User   User               `gorm:"foreignKey:UserID;references:ID"`
 	Type   VerificationType   `gorm:"type:enum('email', 'phone');not null"`
 	Status VerificationStatus `gorm:"type:enum('pending', 'verified', 'failed');not null"`
 

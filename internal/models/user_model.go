@@ -1,7 +1,6 @@
-package user
+package models
 
 import (
-	"nova-backend-user-product-service/internal/countrycode"
 	"time"
 
 	"github.com/google/uuid"
@@ -13,7 +12,7 @@ type User struct {
 	Username string                  `gorm:"unique;not null"`
 	Phone    int64                   `gorm:"unique"`
 	CodeID   uuid.UUID               `gorm:"type:char(36);not null"` // FK field
-	Code     countrycode.CountryCode `gorm:"foreignKey:CodeID;references:ID"`
+	Code     CountryCode             `gorm:"foreignKey:CodeID;references:ID"`
 
 	FirstName string    `gorm:"not null"`
 	LastName  string    `gorm:"not null"`
