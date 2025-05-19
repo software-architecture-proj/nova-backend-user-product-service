@@ -16,7 +16,7 @@ type pocketRepo struct {
     db *gorm.DB
 }
 
-func NewRepository(db *gorm.DB) PocketRepository {
+func NewPocketRepository(db *gorm.DB) PocketRepository {
 	return &pocketRepo{db}
 }
 
