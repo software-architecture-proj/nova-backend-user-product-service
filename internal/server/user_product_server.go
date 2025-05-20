@@ -1,177 +1,293 @@
-package server
+package services
 
 import (
-    "context"
-	"log"
-	"net"
-	"os"
-    "strconv"
+	"context"
+	"fmt"
+	"time"
 
-pb "github.com/software-architecture-proj/nova-backend-common-protos/gen/go/user_product_service" 
-	"google.golang.org/grpc"
-    "github.com/google/uuid"
-	"google.golang.org/grpc/reflection"
-    "github.com/software-architecture-proj/nova-backend-user-product-service/internal/models"
-    "github.com/software-architecture-proj/nova-backend-user-product-service/config"
+	"github.com/google/uuid"
+	"github.com/software-architecture-proj/nova-backend-user-product-service/internal/models"
+	"github.com/software-architecture-proj/nova-backend-user-product-service/internal/repos"
+	pb "github.com/software-architecture-proj/nova-backend-common-protos/gen/go/user_product_service"
 )
 
-// userProductServer is the implementation of the UserServiceServer interface.
-type userProductServer struct {
-	pb.UnimplementedUserServiceServer // Embed this to handle unimplemented methods.
+type UserProductService struct {
+	pb.UnimplementedUserProductServiceServer
+	UserRepo       repos.UserRepository
+	FavoriteRepo   repos.FavoriteRepository
+	PocketRepo     repos.PocketRepository
 }
 
-// CreateUser implements the CreateUser RPC method.
-func (s *userProductServer) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.User, error) {
-    createdUser := &models.User{
-        ID:         uuid.New(),
-        Email:      req.GetEmail(),
-        Username:   req.GetUsername(),
-        Phone:      strconv.ParseInt(req.GetPhone(), 10, 64),
-        //@trigger: Don't know what to do here...
-    }
-
-	return newUser, nil
-}
-
-// GetUserById implements the GetUserById RPC method.
-func (s *userProductServer) GetUserById(ctx context.Context, req *pb.GetUserByIdRequest) (*pb.User, error) {
-	// Implement your user retrieval logic here.
-	log.Printf("Received GetUserById request: %v", req)
-
-	// Example (replace with database lookup):
-	if req.UserId == "user-id-123" {
-		user := &pb.User{
-			Id:        "user-id-123",
-			Email:     "test@example.com",
-			Username:  "testuser",
-			Phone:     "123-456-7890",
-			FirstName: "Test",
-			LastName:  "User",
-			Birthdate: "1990-01-01",
-			CreatedAt: time.Now().String(),
-			UpdatedAt: time.Now().String(),
-		}
-		return user, nil
+// User Management
+func (s *UserProductService) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
+	userID := uuid.New()
+	codeID, err := uuid.Parse(req.GetCodeId())
+	if err != nil {
+		return nil, fmt.Errorf("invalid code ID: %w", err)
 	}
-	return nil, status.Errorf(codes.NotFound, "User not found") //  Use status.Errorf
-}
-
-// UpdateUserById implements the UpdateUserById RPC method.
-func (s *userProductServer) UpdateUserById(ctx context.Context, req *pb.UpdateUserByIdRequest) (*pb.User, error) {
-	// Implement your user update logic here
-	log.Printf("Received UpdateUserById request: %v", req)
-    updatedUser := &pb.User{
-		Id:        req.Id,
-		Email:     req.Email,
-		Username:  req.Username,
-		Phone:     req.Phone,
-		FirstName: req.FirstName,
-		LastName:  req.LastName,
-		Birthdate: req.Birthdate,
-		UpdatedAt: time.Now().String(),
+	user := &models.User{
+		ID:        userID,
+		Email:     req.GetEmail(),
+		Username:  req.GetUsername(),
+		Phone:     stringToInt64(req.GetPhone()),
+		CodeID:    codeID,
+		FirstName: req.GetFirstName(),
+		LastName:  req.GetLastName(),
+		Birthdate: parseDate(req.GetBirthdate()),
 	}
-	return updatedUser, nil
-}
-
-// DeleteUserById implements the DeleteUserById RPC.
-func (s *userProductServer) DeleteUserById(ctx context.Context, req *pb.DeleteUserByIdRequest) (*pb.DeleteResponse, error) {
-	// Implement your delete logic here.
-	log.Printf("Received DeleteUserById request: %v", req)
-	return &pb.DeleteResponse{Success: true}, nil
-}
-
-// CreateFavorite implements the CreateFavorite RPC method.
-func (s *userProductServer) CreateFavorite(ctx context.Context, req *pb.CreateFavoriteRequest) (*pb.Favorite, error) {
-    createdFavorite := &models.Favorite{
-        ID:             uuid.New(),
-        UserID:         req.GetUserId(),
-        //User: @trigger: I don't understand, the struct should have an User struct inside?
-        FavoriteUserID: req.GetFavoriteUserId(),
-        Alias:          req.GetAlias(),
-    }
-
-    repo := NewFavoriteRepository(DB)
-    repo.CreateFavorite(createdFavorite)
-
-	return newFavorite, nil
-}
-
-func (s *userProductServer) GetFavoritesByUserId(ctx context.Context, req *pb.GetFavoritesByUserIdRequest) (*pb.GetFavoritesByUserIdResponse, error) {
-	// Implement
-	log.Printf("Received GetFavoritesByUserId: %v", req)
-	favorites := []*pb.Favorite{
-		{
-			Id:             "fav-id-1",
-			UserId:         req.UserId,
-			FavoriteUserId: "user-id-2",
-			Alias:          "My Favorite User",
-			CreatedAt:      time.Now().String(),
-			UpdatedAt:      time.Now().String(),
-		},
+	if err := s.UserRepo.CreateUser(user); err != nil {
+		return nil, err
 	}
-	return &pb.GetFavoritesByUserIdResponse{Favorites: favorites}, nil
+	return &pb.CreateUserResponse{
+		Success: true,
+		Message: "User created successfully",
+		UserId:  userID.String(),
+	}, nil
 }
 
-func (s *userProductServer) UpdateFavoriteById(ctx context.Context, req *pb.UpdateFavoriteByIdRequest) (*pb.Favorite, error) {
-	// Implement
-	log.Printf("Received UpdateFavoriteById: %v", req)
-	updatedFavorite := &pb.Favorite{
-		Id:             req.Id,
-		Alias:          req.Alias,
-		UpdatedAt:      time.Now().String(),
+func (s *UserProductService) GetUserById(ctx context.Context, req *pb.GetUserByIdRequest) (*pb.GetUserByIdResponse, error) {
+	id, err := uuid.Parse(req.GetUserId())
+	if err != nil {
+		return nil, err
 	}
-	return updatedFavorite, nil
-}
-
-func (s *userProductServer) DeleteFavoriteById(ctx context.Context, req *pb.DeleteFavoriteByIdRequest) (*pb.DeleteResponse, error) {
-	// Implement
-	log.Printf("Received DeleteFavoriteById: %v", req)
-	return &pb.DeleteResponse{Success: true}, nil
-}
-
-// CreatePocket implements the CreatePocket RPC.
-func (s *userProductServer) CreatePocket(ctx context.Context, req *pb.CreatePocketRequest) (*pb.Pocket, error) {
-	log.Printf("Received CreatePocket: %v", req)
-	pocket := &pb.Pocket{
-		Id:           "pocket-1", // generate
-		UserId:       req.UserId,
-		PocketUserId: req.PocketUserId,
-		Alias:        req.Alias,
-		CreatedAt:    time.Now().String(),
-		UpdatedAt:    time.Now().String(),
+	user, err := s.UserRepo.GetUserById(id)
+	if err != nil {
+		return nil, err
 	}
-	return pocket, nil
+	return &pb.GetUserByIdResponse{
+		Success:   true,
+		Message:   "User retrieved successfully",
+		Email:     user.Email,
+		Username:  user.Username,
+		Phone:     fmt.Sprintf("%d", user.Phone),
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Birthdate: user.Birthdate.Format("2006-01-02"),
+	}, nil
 }
 
-// GetPocketsByUserId implements the GetPocketsByUserId RPC.
-func (s *userProductServer) GetPocketsByUserId(ctx context.Context, req *pb.GetPocketsByUserIdRequest) (*pb.GetPocketsByUserIdResponse, error) {
-	log.Printf("Received GetPocketsByUserId: %v", req)
-	pockets := []*pb.Pocket{
-		{
-			Id:           "pocket-1",
-			UserId:       req.UserId,
-			PocketUserId: "user-2",
-			Alias:        "My Pocket",
-			CreatedAt:    time.Now().String(),
-			UpdatedAt:    time.Now().String(),
-		},
+func (s *UserProductService) UpdateUserById(ctx context.Context, req *pb.UpdateUserByIdRequest) (*pb.UpdateUserByIdResponse, error) {
+	id, err := uuid.Parse(req.GetId())
+	if err != nil {
+		return nil, err
 	}
-	return &pb.GetPocketsByUserIdResponse{Pockets: pockets}, nil
-}
-
-// UpdatePocketById implements the UpdatePocketById RPC.
-func (s *userProductServer) UpdatePocketById(ctx context.Context, req *pb.UpdatePocketByIdRequest) (*pb.Pocket, error) {
-	log.Printf("Received UpdatePocketById: %v", req)
-	pocket := &pb.Pocket{
-		Id:        req.Id,
-		Alias:     req.Alias,
-		UpdatedAt: time.Now().String(),
+	user := &models.User{
+		ID:        id,
+		Email:     req.GetEmail(),
+		Username:  req.GetUsername(),
+		Phone:     stringToInt64(req.GetPhone()),
+		FirstName: req.GetFirstName(),
+		LastName:  req.GetLastName(),
+		Birthdate: parseDate(req.GetBirthdate()),
 	}
-	return pocket, nil
+	if err := s.UserRepo.UpdateUser(user); err != nil {
+		return nil, err
+	}
+	return &pb.UpdateUserByIdResponse{
+		Success:   true,
+		Message:   "User updated",
+		Email:     user.Email,
+		Username:  user.Username,
+		Phone:     fmt.Sprintf("%d", user.Phone),
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Birthdate: user.Birthdate.Format("2006-01-02"),
+	}, nil
 }
 
-// DeletePocketById implements the DeletePocketById RPC.
-func (s *userProductServer) DeletePocketById(ctx context.Context, req *pb.DeletePocketByIdRequest) (*pb.DeleteResponse, error) {
-	log.Printf("Received DeletePocketById: %v", req)
-	return &pb.DeleteResponse{Success: true}, nil
+func (s *UserProductService) DeleteUserById(ctx context.Context, req *pb.DeleteUserByIdRequest) (*pb.DeleteUserByIdResponse, error) {
+	id, err := uuid.Parse(req.GetId())
+	if err != nil {
+		return nil, err
+	}
+	if err := s.UserRepo.DeleteUserById(id); err != nil {
+		return nil, err
+	}
+	return &pb.DeleteUserByIdResponse{
+		Success: true,
+		Message: "User deleted",
+	}, nil
+}
+
+// Favorites
+func (s *UserProductService) CreateFavorite(ctx context.Context, req *pb.CreateFavoriteRequest) (*pb.CreateFavoriteResponse, error) {
+	favoriteID := uuid.New()
+
+	userID, err := uuid.Parse(req.GetUserId())
+	if err != nil {
+		return nil, fmt.Errorf("invalid user ID: %w", err)
+	}
+
+	favoriteUserID, err := uuid.Parse(req.GetFavoriteUserId())
+	if err != nil {
+		return nil, fmt.Errorf("invalid favorite user ID: %w", err)
+	}
+
+	favorite := &models.Favorite{
+		ID:              favoriteID,
+		UserID:          userID,
+		FavoriteUserID:  favoriteUserID,
+		Alias:           req.GetAlias(),
+	}
+	if err := s.FavoriteRepo.CreateFavorite(favorite); err != nil {
+		return nil, err
+	}
+	return &pb.CreateFavoriteResponse{
+		Success: true,
+		Message: "Favorite created successfully",
+        FavoriteId: favoriteID.String(),
+	}, nil
+}
+
+func (s *UserProductService) GetFavoritesByUserId(ctx context.Context, req *pb.GetFavoritesByUserIdRequest) (*pb.GetFavoritesByUserIdResponse, error) {
+	userID, err := uuid.Parse(req.GetUserId())
+	if err != nil {
+		return nil, fmt.Errorf("invalid user ID: %w", err)
+	}
+
+	favs, err := s.FavoriteRepo.GetFavoritesByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+	var response []*pb.Favorite
+	for _, f := range favs {
+		response = append(response, &pb.Favorite{
+			Id:               f.ID.String(),
+			UserId:           f.UserID.String(),
+			FavoriteUserId:   f.FavoriteUserID.String(),
+			FavoriteUsername: f.FavoriteUser.Username,
+			Alias:            f.Alias,
+		})
+	}
+	return &pb.GetFavoritesByUserIdResponse{
+        Success: true,
+        Message: "Favorites retrieved successfully",
+        Favorites: response
+    }, nil
+}
+
+func (s *UserProductService) UpdateFavoriteById(ctx context.Context, req *pb.UpdateFavoriteByIdRequest) (*pb.UpdateFavoriteByIdResponse, error) {
+	id, err := uuid.Parse(req.GetId())
+	if err != nil {
+		return nil, err
+	}
+
+    fav := &models.Favorite{ID: id, Alias: req.GetAlias()}
+	if err := s.FavoriteRepo.UpdateFavorite(fav); err != nil {
+		return nil, err
+	}
+    return &pb.UpdateFavoriteByIdResponse{Success: true, Message: "Favorite updated", NewAlias: fav.Alias}, nil
+}
+
+func (s *UserProductService) DeleteFavoriteById(ctx context.Context, req *pb.DeleteFavoriteByIdRequest) (*pb.DeleteFavoriteByIdResponse, error) {
+	id, err := uuid.Parse(req.GetId())
+	if err != nil {
+		return nil, err
+	}
+
+	if err := s.FavoriteRepo.DeleteFavoriteByID(id); err != nil {
+		return nil, err
+	}
+	return &pb.DeleteFavoriteByIdResponse{Success: true, Message: "Favorite deleted"}, nil
+}
+
+// Pockets
+func (s *UserProductService) CreatePocket(ctx context.Context, req *pb.CreatePocketRequest) (*pb.CreatePocketResponse, error) {
+	pocketID := uuid.New()
+
+	userID, err := uuid.Parse(req.GetUserId())
+	if err != nil {
+		return nil, fmt.Errorf("invalid user ID: %w", err)
+	}
+
+	pocket := &models.Pocket{
+		ID:        pocketID,
+		UserID:    userID,
+		Name:      req.GetName(),
+		Category:  models.PocketCategory(req.GetCategory()),
+		Amount:    int64(req.GetMaxAmount()),
+	}
+	if err := s.PocketRepo.CreatePocket(pocket); err != nil {
+		return nil, err
+	}
+    return &pb.CreatePocketResponse{
+        Success:  true, 
+        Message:  "Pocket created", 
+        PocketId: pocketID.String(), 
+    }, nil
+}
+
+func (s *UserProductService) GetPocketsByUserId(ctx context.Context, req *pb.GetPocketsByUserIdRequest) (*pb.GetPocketsByUserIdResponse, error) {
+	userID, err := uuid.Parse(req.GetUserId())
+	if err != nil {
+		return nil, fmt.Errorf("invalid user ID: %w", err)
+	}
+
+	pockets, err := s.PocketRepo.GetPocketsByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+	var res []*pb.Pocket
+	for _, p := range pockets {
+		res = append(res, &pb.Pocket{
+			Id:        p.ID.String(),
+			UserId:    p.UserID.String(),
+			Name:      p.Name,
+			Category:  string(p.Category),
+			MaxAmount: int32(p.Amount),
+		})
+	}
+    return &pb.GetPocketsByUserIdResponse{
+        Success: true,
+        Message: "Pockets retrieved successfully",
+        Pockets: res,
+    }, nil
+}
+
+func (s *UserProductService) UpdatePocketById(ctx context.Context, req *pb.UpdatePocketByIdRequest) (*pb.UpdatePocketByIdResponse, error) {
+	id, err := uuid.Parse(req.GetId())
+	if err != nil {
+		return nil, err
+	}
+
+	p := &models.Pocket{
+        ID:       id,
+		Name:     req.GetName(),
+		Category: models.PocketCategory(req.GetCategory()),
+		Amount:   int64(req.GetMaxAmount()),
+	}
+	if err := s.PocketRepo.UpdatePocket(p); err != nil {
+		return nil, err
+	}
+	return &pb.UpdatePocketByIdResponse{
+        Success:    true,
+        Message:    "Pocket updated",
+        Name:       p.Name,
+        Category:   p.Category,
+        MaxAmount:  int32(p.Amount),
+    }, nil
+}
+
+func (s *UserProductService) DeletePocketById(ctx context.Context, req *pb.DeletePocketByIdRequest) (*pb.DeletePocketByIdResponse, error) {
+	id, err := uuid.Parse(req.GetId())
+	if err != nil {
+		return nil, err
+	}
+
+	if err := s.PocketRepo.DeletePocketByID(id); err != nil {
+		return nil, err
+	}
+	return &pb.DeletePocketByIdResponse{Success: true, Message: "Pocket deleted"}, nil
+}
+
+// Helper functions
+func stringToInt64(s string) int64 {
+	var i int64
+	fmt.Sscanf(s, "%d", &i)
+	return i
+}
+
+func parseDate(d string) time.Time {
+	t, _ := time.Parse("2006-01-02", d)
+	return t
 }
