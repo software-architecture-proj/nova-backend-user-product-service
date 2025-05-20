@@ -10,7 +10,7 @@ type UserRepository interface {
 	CreateUser(user *User) error
     GetUserByID(id uuid.UUID) (*User, error)
 	UpdateUser(user *User) error
-	DeleteUser(id uuid.UUID) error
+	DeleteUserById(id uuid.UUID) error
     ListUsers() ([]User, error)
 }
 
