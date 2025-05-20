@@ -3,22 +3,26 @@ package main
 import (
 	"fmt"
 	"log"
-	"nova-backend-user-product-service/config"
+
+	"github.com/software-architecture-proj/nova-backend-user-product-service/config"
 )
 
 func main() {
-	config.InitDB()
+	log.Println("🔧 Starting user product service...")
+
+	if err := config.InitDB(); err != nil {
+		log.Fatalf("DB initialization failed: %v", err)
+	}
+	log.Println("DB initialized successfully")
 
 	sqlDB, err := config.DB.DB()
 	if err != nil {
-		log.Fatalf("Database instance error: %v", err)
+		log.Fatalf("Getting DB instance failed: %v", err)
 	}
 
-	err = sqlDB.Ping()
-	if err != nil {
-		log.Fatalf("Failed to ping DB: %v", err)
+	if err := sqlDB.Ping(); err != nil {
+		log.Fatalf("Ping to DB failed: %v", err)
 	}
 
 	fmt.Println("Database connection established.")
-
 }
