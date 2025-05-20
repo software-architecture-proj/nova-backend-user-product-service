@@ -49,3 +49,12 @@ func (r *userRepo) ListUsers() ([]User, error) {
 	}
 	return users, nil
 }
+
+func (r *userRepo) ListCountryCodes() ([]CountryCode, error) {
+	var codes []CountryCode
+	if err := r.db.Find(&codes).Error; err != nil {
+		return nil, err
+	}
+	return codes, nil
+}
+

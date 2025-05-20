@@ -18,6 +18,27 @@ type UserProductService struct {
 	PocketRepo     repos.PocketRepository
 }
 
+// Country Codes
+func (s *UserProductService) GetCountryCodes(ctx context.Context, req *pb.GetCountryCodesRequest) (*pb.GetCountryCodesResponse, error) {
+	codes, err := s.UserRepo.ListCountryCodes()
+	if err != nil {
+		return nil, err
+	}
+	var response []*pb.CountryCode
+	for _, c := range codes {
+		response = append(response, &pb.CountryCode{
+			Id:               c.ID.String(),
+			Name:             c.Name,
+            Code:             fmt.Sprintf("%d", c.Code),
+		})
+	}
+	return &pb.GetCountryCodesResponse{
+        Success: true,
+        Message: "Country codes retrieved successfully",
+        Codes: response
+    }, nil
+}
+
 // User Management
 func (s *UserProductService) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
 	userID := uuid.New()
