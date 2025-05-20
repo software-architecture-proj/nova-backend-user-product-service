@@ -3,6 +3,7 @@ package repos
 import (
 	"gorm.io/gorm" 
     "github.com/software-architecture-proj/nova-backend-user-product-service/internal/models"
+    "github.com/google/uuid"
 )
 
 type UserRepository interface {
