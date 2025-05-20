@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
-	"nova-backend-user-product-service/config"
+	"github.com/software-architecture-proj/nova-backend-user-product-service/config"
 )
 
 func main() {
