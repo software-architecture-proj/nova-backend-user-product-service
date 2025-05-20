@@ -8,7 +8,7 @@ import (
 
 type UserRepository interface {
 	CreateUser(user *User) error
-    GetUserByID(id uuid.UUID) (*User, error)
+    GetUserById(id uuid.UUID) (*User, error)
 	UpdateUser(user *User) error
 	DeleteUserById(id uuid.UUID) error
     ListUsers() ([]User, error)
@@ -34,7 +34,7 @@ func (r *userRepo) DeleteUserById(id uuid.UUID) error {
     return r.db.Delete(&models.User{}, "id = ?", id).Error
 }
 
-func (r *userRepo) GetUserByID(id uuid.UUID) (*User, error) {
+func (r *userRepo) GetUserById(id uuid.UUID) (*User, error) {
 	var user User
 	if err := r.db.First(&user, id).Error; err != nil {
 		return nil, err
