@@ -7,9 +7,9 @@ import (
 )
 
 type FavoriteRepository interface {
-    CreateFavorite(favorite *Favorite) error
-    GetFavoritesByUserID(user_id uuid.UUID) ([]Favorite, error)
-    UpdateFavorite(favorite *Favorite) error
+    CreateFavorite(favorite *models.Favorite) error
+    GetFavoritesByUserID(user_id uuid.UUID) ([]models.Favorite, error)
+    UpdateFavorite(favorite *models.Favorite) error
     DeleteFavoriteByID(id uuid.UUID) error
 }
 
@@ -21,22 +21,22 @@ func NewFavoriteRepository(db *gorm.DB) FavoriteRepository {
 	return &favoriteRepo{db}
 }
 
-func (r *favoriteRepo) CreateFavorite(favorite *Favorite) error {
+func (r *favoriteRepo) CreateFavorite(favorite *models.Favorite) error {
 	return r.db.Create(favorite).Error
 }
 
-func (r *favoriteRepo) GetFavoritesByUserID(user_id uuid.UUID) ([]Favorite, error) {
-	var favorites []Favorite
+func (r *favoriteRepo) GetFavoritesByUserID(user_id uuid.UUID) ([]models.Favorite, error) {
+	var favorites []models.Favorite
 	if err := r.db.Where("user_id = ?", user_id).Find(&favorites).Error; err != nil {
 		return nil, err
 	}
 	return favorites, nil
 }
 
-func (r *favoriteRepo) UpdateFavorite(favorite *Favorite) error {
-    return r.db.Model(&Favorite{}).Where("id = ?", favorite.ID).Updates(favorite).Error
+func (r *favoriteRepo) UpdateFavorite(favorite *models.Favorite) error {
+    return r.db.Model(&models.Favorite{}).Where("id = ?", favorite.ID).Updates(favorite).Error
 }
 
 func (r *favoriteRepo) DeleteFavoriteByID(id uuid.UUID) error {
-    return r.db.Where("id = ?", id).Delete(&Favorite{}).Error
+    return r.db.Where("id = ?", id).Delete(&models.Favorite{}).Error
 }

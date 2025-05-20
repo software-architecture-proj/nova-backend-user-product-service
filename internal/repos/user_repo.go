@@ -7,11 +7,11 @@ import (
 )
 
 type UserRepository interface {
-	CreateUser(user *User) error
-    GetUserById(id uuid.UUID) (*User, error)
-	UpdateUser(user *User) error
+	CreateUser(user *models.User) error
+    GetUserById(id uuid.UUID) (*models.User, error)
+	UpdateUser(user *models.User) error
 	DeleteUserById(id uuid.UUID) error
-    ListUsers() ([]User, error)
+    ListUsers() ([]models.User, error)
 }
 
 type userRepo struct {
@@ -22,36 +22,36 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 	return &userRepo{db}
 }
 
-func (r *userRepo) CreateUser(user *User) error {
+func (r *userRepo) CreateUser(user *models.User) error {
 	return r.db.Create(user).Error
 }
 
-func (r *userRepo) UpdateUser(user *User) error {
-    return r.db.Model(&User{}).Where("id = ?", user.ID).Updates(user).Error
+func (r *userRepo) UpdateUser(user *models.User) error {
+    return r.db.Model(&models.User{}).Where("id = ?", user.ID).Updates(user).Error
 }
 
 func (r *userRepo) DeleteUserById(id uuid.UUID) error {
-    return r.db.Delete(&models.User{}, "id = ?", id).Error
+    return r.db.Delete(&models.models.User{}, "id = ?", id).Error
 }
 
-func (r *userRepo) GetUserById(id uuid.UUID) (*User, error) {
-	var user User
+func (r *userRepo) GetUserById(id uuid.UUID) (*models.User, error) {
+	var user models.User
 	if err := r.db.First(&user, id).Error; err != nil {
 		return nil, err
 	}
 	return &user, nil
 }
 
-func (r *userRepo) ListUsers() ([]User, error) {
-	var users []User
+func (r *userRepo) ListUsers() ([]models.User, error) {
+	var users []models.User
 	if err := r.db.Find(&users).Error; err != nil {
 		return nil, err
 	}
 	return users, nil
 }
 
-func (r *userRepo) ListCountryCodes() ([]CountryCode, error) {
-	var codes []CountryCode
+func (r *userRepo) ListCountryCodes() ([]models.CountryCode, error) {
+	var codes []models.CountryCode
 	if err := r.db.Find(&codes).Error; err != nil {
 		return nil, err
 	}
