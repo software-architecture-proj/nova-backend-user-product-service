@@ -22,11 +22,11 @@ const (
 type Pocket struct {
 	ID        uuid.UUID      `gorm:"type:char(36);primaryKey"`
 	UserID    uuid.UUID      `gorm:"type:char(36);not null"` // FK to user.id
-	User      User           `gorm:"foreignKey:User_ID;references:ID"`
+	User      User           `gorm:"foreignKey:UserID;references:ID"`
 	Name      string         `gorm:"type:varchar(50);not null"`
 	Category  PocketCategory `gorm:"type:enum('home', 'emergency', 'trips', 'entertainment', 'studies', 'transportation', 'debt', 'other');not null"`
 	Amount    int64          `gorm:"not null"` // Amount in the pocket
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	DeletedAt time.Time `gorm:"index"` // Soft delete
+	DeletedAt time.Time      `gorm:"index"` // Soft delete
 }

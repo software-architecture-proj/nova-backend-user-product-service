@@ -5,6 +5,7 @@ import (
 	"net"
 
     "google.golang.org/grpc"
+    "google.golang.org/grpc/reflection"
 
 	"github.com/software-architecture-proj/nova-backend-user-product-service/config"
 	"github.com/software-architecture-proj/nova-backend-user-product-service/internal/repos"
@@ -46,6 +47,9 @@ func main() {
 	// Initialize gRPC server
 	grpcServer := grpc.NewServer()
 	pb.RegisterUserProductServiceServer(grpcServer, service)
+    
+    // Enable reflection
+    reflection.Register(grpcServer)
 
 	log.Println("gRPC server listening on :50051")
 	if err := grpcServer.Serve(lis); err != nil {
