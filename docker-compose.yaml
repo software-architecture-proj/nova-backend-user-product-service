@@ -12,10 +12,10 @@ services:
       - "15432:5432"
     volumes:
       - ./config/init.sql:/docker-entrypoint-initdb.d/init.sql
-  ups:
-    image: user_product_service:3
+  user_product_service:
+    image: user_product_service:5
     ports:
-      - "50051:50051"
+      - "50052:50052"
     depends_on:
       - db
     environment:
@@ -30,6 +30,4 @@ services:
         echo 'Waiting for Postgres...'; sleep 1;
       done;
       ./user_product_service"
-
-# To run the services, use the following command:
-# docker-compose up
+    restart: on-failure
