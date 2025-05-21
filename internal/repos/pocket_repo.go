@@ -34,7 +34,7 @@ func (r *pocketRepo) GetPocketsByUserID(user_id uuid.UUID) ([]models.Pocket, err
 }
 
 func (r *pocketRepo) UpdatePocket(pocket *models.Pocket) error {
-    return r.db.Model(&models.Pocket{}).Where("id = ?", models.Pocket.ID).Updates(pocket).Error
+    return r.db.Model(&models.Pocket{}).Where("id = ?", pocket.ID).Updates(pocket).Error
 }
 
 func (r *pocketRepo) DeletePocketByID(id uuid.UUID) error {

@@ -1,6 +1,6 @@
 module github.com/software-architecture-proj/nova-backend-user-product-service
 
-go 1.24
+go 1.24.3
 
 require (
 	github.com/google/uuid v1.6.0

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"log"
+	"net"
 
     "google.golang.org/grpc"
 
@@ -20,24 +20,18 @@ func main() {
 	}
 	log.Println("DB initialized successfully")
 
-	sqlDB, err := config.DB.DB()
-	if err != nil {
-		log.Fatalf("Getting DB instance failed: %v", err)
+	db := config.DB
+	if db == nil {
+		log.Fatalf("DB instance is nil")
 	}
 
-	if err := sqlDB.Ping(); err != nil {
-		log.Fatalf("Ping to DB failed: %v", err)
-	}
-
-	fmt.Println("Database connection established.")
-    
-    // Initialize repositories
-    userRepo := repos.NewUserRepository(sqlDB)
-	favoriteRepo := repos.NewFavoriteRepository(sqlDB)
-	pocketRepo := repos.NewPocketRepository(sqlDB)
+	// Initialize repositories
+	userRepo := repos.NewUserRepository(db)
+	favoriteRepo := repos.NewFavoriteRepository(db)
+	pocketRepo := repos.NewPocketRepository(db)
 
 	// Create gRPC server instance
-	service := &services.UserProductService{
+	service := &server.UserProductService{
 		UserRepo:     userRepo,
 		FavoriteRepo: favoriteRepo,
 		PocketRepo:   pocketRepo,
@@ -49,7 +43,7 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	// Iniciate gRPC server
+	// Initialize gRPC server
 	grpcServer := grpc.NewServer()
 	pb.RegisterUserProductServiceServer(grpcServer, service)
 

@@ -12,6 +12,7 @@ type UserRepository interface {
 	UpdateUser(user *models.User) error
 	DeleteUserById(id uuid.UUID) error
     ListUsers() ([]models.User, error)
+    ListCountryCodes() ([]models.CountryCode, error)
 }
 
 type userRepo struct {
@@ -31,7 +32,7 @@ func (r *userRepo) UpdateUser(user *models.User) error {
 }
 
 func (r *userRepo) DeleteUserById(id uuid.UUID) error {
-    return r.db.Delete(&models.models.User{}, "id = ?", id).Error
+    return r.db.Delete(&models.User{}, "id = ?", id).Error
 }
 
 func (r *userRepo) GetUserById(id uuid.UUID) (*models.User, error) {

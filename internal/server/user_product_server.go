@@ -1,4 +1,4 @@
-package services
+package server
 
 import (
 	"context"
@@ -29,14 +29,12 @@ func (s *UserProductService) GetCountryCodes(ctx context.Context, req *pb.GetCou
 		response = append(response, &pb.CountryCode{
 			Id:               c.ID.String(),
 			Name:             c.Name,
-            Code:             fmt.Sprintf("%d", c.Code),
-		})
+            Code:             fmt.Sprintf("%d", c.Code)})
 	}
 	return &pb.GetCountryCodesResponse{
         Success: true,
         Message: "Country codes retrieved successfully",
-        Codes: response
-    }, nil
+        Codes: response}, nil
 }
 
 // User Management
@@ -177,14 +175,12 @@ func (s *UserProductService) GetFavoritesByUserId(ctx context.Context, req *pb.G
 			UserId:           f.UserID.String(),
 			FavoriteUserId:   f.FavoriteUserID.String(),
 			FavoriteUsername: f.FavoriteUser.Username,
-			Alias:            f.Alias,
-		})
+			Alias:            f.Alias})
 	}
 	return &pb.GetFavoritesByUserIdResponse{
         Success: true,
         Message: "Favorites retrieved successfully",
-        Favorites: response
-    }, nil
+        Favorites: response}, nil
 }
 
 func (s *UserProductService) UpdateFavoriteById(ctx context.Context, req *pb.UpdateFavoriteByIdRequest) (*pb.UpdateFavoriteByIdResponse, error) {
@@ -284,9 +280,8 @@ func (s *UserProductService) UpdatePocketById(ctx context.Context, req *pb.Updat
         Success:    true,
         Message:    "Pocket updated",
         Name:       p.Name,
-        Category:   p.Category,
-        MaxAmount:  int32(p.Amount),
-    }, nil
+        Category:   string(p.Category),
+        MaxAmount:  int32(p.Amount)}, nil
 }
 
 func (s *UserProductService) DeletePocketById(ctx context.Context, req *pb.DeletePocketByIdRequest) (*pb.DeletePocketByIdResponse, error) {
