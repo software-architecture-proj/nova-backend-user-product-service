@@ -6,16 +6,16 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	pb "github.com/software-architecture-proj/nova-backend-common-protos/gen/go/user_product_service"
 	"github.com/software-architecture-proj/nova-backend-user-product-service/internal/models"
 	"github.com/software-architecture-proj/nova-backend-user-product-service/internal/repos"
-	pb "github.com/software-architecture-proj/nova-backend-common-protos/gen/go/user_product_service"
 )
 
 type UserProductService struct {
 	pb.UnimplementedUserProductServiceServer
-	UserRepo       repos.UserRepository
-	FavoriteRepo   repos.FavoriteRepository
-	PocketRepo     repos.PocketRepository
+	UserRepo     repos.UserRepository
+	FavoriteRepo repos.FavoriteRepository
+	PocketRepo   repos.PocketRepository
 }
 
 // Country Codes
@@ -27,25 +27,24 @@ func (s *UserProductService) GetCountryCodes(ctx context.Context, req *pb.GetCou
 	var response []*pb.CountryCode
 	for _, c := range codes {
 		response = append(response, &pb.CountryCode{
-			Id:               c.ID.String(),
-			Name:             c.Name,
-            Code:             fmt.Sprintf("%d", c.Code)})
+			Id:   c.ID.String(),
+			Name: c.Name,
+			Code: fmt.Sprintf("%d", c.Code)})
 	}
 	return &pb.GetCountryCodesResponse{
-        Success: true,
-        Message: "Country codes retrieved successfully",
-        Codes: response}, nil
+		Success: true,
+		Message: "Country codes retrieved successfully",
+		Codes:   response}, nil
 }
 
 // User Management
 func (s *UserProductService) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
-	userID := uuid.New()
 	codeID, err := uuid.Parse(req.GetCodeId())
 	if err != nil {
 		return nil, fmt.Errorf("invalid code ID: %w", err)
 	}
 	user := &models.User{
-		ID:        userID,
+		ID:        uuid.MustParse(req.GetUserId()),
 		Email:     req.GetEmail(),
 		Username:  req.GetUsername(),
 		Phone:     stringToInt64(req.GetPhone()),
@@ -60,7 +59,7 @@ func (s *UserProductService) CreateUser(ctx context.Context, req *pb.CreateUserR
 	return &pb.CreateUserResponse{
 		Success: true,
 		Message: "User created successfully",
-		UserId:  userID.String(),
+		UserId:  req.GetUserId(),
 	}, nil
 }
 
@@ -143,18 +142,18 @@ func (s *UserProductService) CreateFavorite(ctx context.Context, req *pb.CreateF
 	}
 
 	favorite := &models.Favorite{
-		ID:              favoriteID,
-		UserID:          userID,
-		FavoriteUserID:  favoriteUserID,
-		Alias:           req.GetAlias(),
+		ID:             favoriteID,
+		UserID:         userID,
+		FavoriteUserID: favoriteUserID,
+		Alias:          req.GetAlias(),
 	}
 	if err := s.FavoriteRepo.CreateFavorite(favorite); err != nil {
 		return nil, err
 	}
 	return &pb.CreateFavoriteResponse{
-		Success: true,
-		Message: "Favorite created successfully",
-        FavoriteId: favoriteID.String(),
+		Success:    true,
+		Message:    "Favorite created successfully",
+		FavoriteId: favoriteID.String(),
 	}, nil
 }
 
@@ -178,9 +177,9 @@ func (s *UserProductService) GetFavoritesByUserId(ctx context.Context, req *pb.G
 			Alias:            f.Alias})
 	}
 	return &pb.GetFavoritesByUserIdResponse{
-        Success: true,
-        Message: "Favorites retrieved successfully",
-        Favorites: response}, nil
+		Success:   true,
+		Message:   "Favorites retrieved successfully",
+		Favorites: response}, nil
 }
 
 func (s *UserProductService) UpdateFavoriteById(ctx context.Context, req *pb.UpdateFavoriteByIdRequest) (*pb.UpdateFavoriteByIdResponse, error) {
@@ -189,11 +188,11 @@ func (s *UserProductService) UpdateFavoriteById(ctx context.Context, req *pb.Upd
 		return nil, err
 	}
 
-    fav := &models.Favorite{ID: id, Alias: req.GetAlias()}
+	fav := &models.Favorite{ID: id, Alias: req.GetAlias()}
 	if err := s.FavoriteRepo.UpdateFavorite(fav); err != nil {
 		return nil, err
 	}
-    return &pb.UpdateFavoriteByIdResponse{Success: true, Message: "Favorite updated", NewAlias: fav.Alias}, nil
+	return &pb.UpdateFavoriteByIdResponse{Success: true, Message: "Favorite updated", NewAlias: fav.Alias}, nil
 }
 
 func (s *UserProductService) DeleteFavoriteById(ctx context.Context, req *pb.DeleteFavoriteByIdRequest) (*pb.DeleteFavoriteByIdResponse, error) {
@@ -218,20 +217,20 @@ func (s *UserProductService) CreatePocket(ctx context.Context, req *pb.CreatePoc
 	}
 
 	pocket := &models.Pocket{
-		ID:        pocketID,
-		UserID:    userID,
-		Name:      req.GetName(),
-		Category:  models.PocketCategory(req.GetCategory()),
-		Amount:    int64(req.GetMaxAmount()),
+		ID:       pocketID,
+		UserID:   userID,
+		Name:     req.GetName(),
+		Category: models.PocketCategory(req.GetCategory()),
+		Amount:   int64(req.GetMaxAmount()),
 	}
 	if err := s.PocketRepo.CreatePocket(pocket); err != nil {
 		return nil, err
 	}
-    return &pb.CreatePocketResponse{
-        Success:  true, 
-        Message:  "Pocket created", 
-        PocketId: pocketID.String(), 
-    }, nil
+	return &pb.CreatePocketResponse{
+		Success:  true,
+		Message:  "Pocket created",
+		PocketId: pocketID.String(),
+	}, nil
 }
 
 func (s *UserProductService) GetPocketsByUserId(ctx context.Context, req *pb.GetPocketsByUserIdRequest) (*pb.GetPocketsByUserIdResponse, error) {
@@ -254,11 +253,11 @@ func (s *UserProductService) GetPocketsByUserId(ctx context.Context, req *pb.Get
 			MaxAmount: int32(p.Amount),
 		})
 	}
-    return &pb.GetPocketsByUserIdResponse{
-        Success: true,
-        Message: "Pockets retrieved successfully",
-        Pockets: res,
-    }, nil
+	return &pb.GetPocketsByUserIdResponse{
+		Success: true,
+		Message: "Pockets retrieved successfully",
+		Pockets: res,
+	}, nil
 }
 
 func (s *UserProductService) UpdatePocketById(ctx context.Context, req *pb.UpdatePocketByIdRequest) (*pb.UpdatePocketByIdResponse, error) {
@@ -268,7 +267,7 @@ func (s *UserProductService) UpdatePocketById(ctx context.Context, req *pb.Updat
 	}
 
 	p := &models.Pocket{
-        ID:       id,
+		ID:       id,
 		Name:     req.GetName(),
 		Category: models.PocketCategory(req.GetCategory()),
 		Amount:   int64(req.GetMaxAmount()),
@@ -277,11 +276,11 @@ func (s *UserProductService) UpdatePocketById(ctx context.Context, req *pb.Updat
 		return nil, err
 	}
 	return &pb.UpdatePocketByIdResponse{
-        Success:    true,
-        Message:    "Pocket updated",
-        Name:       p.Name,
-        Category:   string(p.Category),
-        MaxAmount:  int32(p.Amount)}, nil
+		Success:   true,
+		Message:   "Pocket updated",
+		Name:      p.Name,
+		Category:  string(p.Category),
+		MaxAmount: int32(p.Amount)}, nil
 }
 
 func (s *UserProductService) DeletePocketById(ctx context.Context, req *pb.DeletePocketByIdRequest) (*pb.DeletePocketByIdResponse, error) {

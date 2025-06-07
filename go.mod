@@ -5,7 +5,7 @@ go 1.24.3
 require (
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
-	github.com/software-architecture-proj/nova-backend-common-protos v0.0.0-20250519232304-ea98ce0c29b7
+	github.com/software-architecture-proj/nova-backend-common-protos v0.0.0-20250607183740-22c49308b1cf
 	google.golang.org/grpc v1.72.1
 	gorm.io/driver/postgres v1.5.11
 	gorm.io/gorm v1.26.1
