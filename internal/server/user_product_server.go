@@ -255,7 +255,7 @@ func (s *UserProductService) GetPocketsByUserId(ctx context.Context, req *pb.Get
 	}
 	return &pb.GetPocketsByUserIdResponse{
 		Success: true,
-		Message: "Pockets retrieved successfully",
+		Message: "Pockets retrieved",
 		Pockets: res,
 	}, nil
 }
