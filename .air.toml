@@ -4,8 +4,8 @@ root = "."
 tmp_dir = "tmp"
 
 [build]
-cmd = "go build -o ./tmp/user_product_service ./main.go"
-bin = "./tmp/user_product_service"
+cmd = "go build -o ./user_product_service main.go"
+bin = "./user_product_service"
 full_bin = "APP_ENV=development ./tmp/user_product_service"
 
 exclude_dir = [
@@ -31,4 +31,5 @@ build = "yellow"
 runner = "green"
 
 [misc]
-livereload_backend = false
+clean_on_exit = true
+livereload_backend = true
