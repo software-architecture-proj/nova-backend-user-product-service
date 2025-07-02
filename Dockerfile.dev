@@ -1,17 +1,20 @@
 FROM golang:1.24
 
-# Install Air for hot reload and PostgreSQL client tools
-RUN go install github.com/air-verse/air@latest && \
-    apt-get update && \
-    apt-get install -y postgresql-client && \
-    rm -rf /var/lib/apt/lists/*
-
 WORKDIR /app
 
+# Install Air
+RUN go install github.com/cosmtrek/air@v1.40.4
+
+# Copy go.mod and go.sum first for caching
 COPY go.mod go.sum ./
 RUN go mod download
 
+# Copy the rest of the code
 COPY . .
+
+# Make sure the tmp dir exists and is writable
+RUN mkdir -p tmp && chmod -R 777 tmp
+
 EXPOSE 50052
 
-CMD ["air"]
+CMD ["air", "-c", ".air.toml"]

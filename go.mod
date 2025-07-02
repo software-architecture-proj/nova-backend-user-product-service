@@ -2,10 +2,12 @@ module github.com/software-architecture-proj/nova-backend-user-product-service
 
 go 1.24.3
 
+toolchain go1.24.4
+
 require (
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
-	github.com/software-architecture-proj/nova-backend-common-protos v0.0.0-20250616022611-dcf45b575ecc
+	github.com/software-architecture-proj/nova-backend-common-protos v0.0.0-20250702023127-4d2a66aff785
 	google.golang.org/grpc v1.72.1
 	gorm.io/driver/postgres v1.5.11
 	gorm.io/gorm v1.26.1

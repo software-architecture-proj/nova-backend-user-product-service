@@ -84,6 +84,20 @@ func (s *UserProductService) GetUserById(ctx context.Context, req *pb.GetUserByI
 	}, nil
 }
 
+func (s *UserProductService) GetUserByUsername(ctx context.Context, req *pb.GetUserByUsernameRequest) (*pb.GetUserByUsernameResponse, error) {
+	uname := req.GetUsername()
+	user, err := s.UserRepo.GetUserByUsername(uname)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.GetUserByUsernameResponse{
+		Success: true,
+		Message: "User retrieved successfully",
+		Email:   user.Email,
+		UserId:  user.ID.String(),
+	}, nil
+}
+
 func (s *UserProductService) UpdateUserById(ctx context.Context, req *pb.UpdateUserByIdRequest) (*pb.UpdateUserByIdResponse, error) {
 	id, err := uuid.Parse(req.GetId())
 	if err != nil {
